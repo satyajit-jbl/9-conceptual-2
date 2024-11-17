@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import React, { createContext, useEffect, useState } from 'react';
 import auth from '../../firebase.init';
 
@@ -12,14 +12,21 @@ const AuthProvider = ({routes}) => {
 
     //function for register, login, google login
     const handleRegister = (email, password)=>{
-        createUserWithEmailAndPassword(auth, email, password)
+        // as we use then in register, we have to return the function
+       return createUserWithEmailAndPassword(auth, email, password)
     }
     const handleLogin = (email, password)=>{
-        signInWithEmailAndPassword(auth, email, password)
+      return  signInWithEmailAndPassword(auth, email, password)
     }
 
     const handleGoogleLogin = () => {
-        signInWithPopup(auth, googleProvider)
+      return  signInWithPopup(auth, googleProvider)
+    }
+    //update profile of current user, call in register, user return befor callback functin
+    const manageProfile=(name, image)=>{
+        updateProfile(auth.currentUser,{
+            displayName: name, photoURL: image
+        })
     }
     const handleLogout=()=>{
         signOut(auth)
@@ -29,13 +36,23 @@ const AuthProvider = ({routes}) => {
         handleRegister,
         handleLogin,
         handleGoogleLogin,
-        handleLogout
+        handleLogout,
+        manageProfile,
+        user,
+        setUser
+        
     }
 
     // to observe user log in
     useEffect(()=>{
         const unsubscribe = onAuthStateChanged(auth,(currentUser)=>{
             console.log(currentUser);
+            if(currentUser){
+                setUser(currentUser)
+            }
+            else{
+                setUser(null)
+            }
 
              // to stop observer
             return ()=>{
